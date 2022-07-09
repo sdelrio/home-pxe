@@ -1,0 +1,16 @@
+- name: debug
+  hosts: localhost
+  tasks:
+    - name: Print facts
+      debug:
+        var: ansible_facts
+    - name: Print facts
+      debug:
+        var: ansible_enp5s0
+
+- name: PXE Server
+  hosts: localhost
+  roles:
+    - pxe_server
+
+

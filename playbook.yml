@@ -1,0 +1,19 @@
+- hosts: all
+  tasks:
+
+    - name: install docker and make
+      apt:
+        update_cache: yes
+        name:
+          - docker.io
+          - docker-compose
+          - make
+          - xorriso
+          - python3-virtualenv
+    - name: Add vagrant to docker group
+      user:
+        name: 'vagrant'
+        groups: 'docker'
+        append: yes
+
+

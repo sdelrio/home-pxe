@@ -1,0 +1,39 @@
+version: "3"
+
+services:
+  dhcp:
+    build: ./dhcp
+    volumes:
+      - ./data/pxe-config/dhcpd.conf:/etc/dhcp/dhcpd.conf
+    network_mode: host
+  #https://segmentfault.com/a/1190000041213097/en
+  #https://access.redhat.com/documentation/es-es/red_hat_enterprise_linux/8/html/performing_an_advanced_rhel_installation/configuring-a-tftp-server-for-uefi-based-clients_preparing-for-a-network-install
+  #https://www.linuxquestions.org/questions/slackware-14/problems-booting-installer-to-uefi-system-via-pxe-4175696093/
+  #https://askubuntu.com/questions/1406685/22-04-jammy-pxe-booting-help
+  #https://unix.stackexchange.com/questions/486829/how-to-boot-linux-kernel-from-network-through-grub2-console
+  tftp:
+    build: ./tftp
+    network_mode: host
+    volumes:
+      # EFI
+      - ./data/pxe-config/grub.cfg:/var/lib/tftpboot/grub/grub.cfg
+      - ./data/pxe-config/grubnetx64.efi.signed:/var/lib/tftpboot/boot/grubnetx64.efi.signed
+      - ./data/os/casper/vmlinuz:/var/lib/tftpboot/vmlinuz
+      - ./data/os/casper/initrd:/var/lib/tftpboot/initrd
+      # ubuntu's default menu requirements
+      - ./data/os/boot/grub/font.pf2:/var/lib/tftpboot/grub/font.pf2
+      - ./data/os/isolinux/splash.png:/var/lib/tftpboot/grub/splash.png
+      - ./data/os/boot/grub/x86_64-efi:/var/lib/tftpboot/grub/x86_64-efi
+      - ./data/os/isolinux/vesamenu.c32:/var/lib/tftpboot/vesamenu.c32
+      - ./data/os/isolinux/libutil.c32:/var/lib/tftpboot/libutil.c32
+      - ./data/os/isolinux/libcom32.c32:/var/lib/tftpboot/libcom32.c32
+  http:
+    image: "nginx:1.21-alpine"
+    network_mode: host
+    volumes:
+      - ./data/images/:/usr/share/nginx/html/images
+      - ./data/ks/:/usr/share/nginx/html/ks
+      - ./data/iso/:/usr/share/nginx/html/iso
+    environment:
+      NGINX_PORT: 80
+

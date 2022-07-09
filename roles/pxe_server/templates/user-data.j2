@@ -1,0 +1,35 @@
+#cloud-config
+#https://ubuntu.com/server/docs/install/autoinstall-reference
+autoinstall:
+  locale: "es_ES.UTF-8"
+  keyboard:
+    layout: "es"
+    variant: "es"
+    #toggle: null
+  apt:
+    geoip: true
+    preserve_sources_list: false
+    primary:
+    - arches: [amd64, i386]
+      uri: http://archive.ubuntu.com/ubuntu
+    - arches: [default]
+      uri: http://ports.ubuntu.com/ubuntu-ports
+  identity: 
+    hostname: ubuntu-server
+    password: $1$/gNl4rCo$x3VnrcV.TCnUUkjBm96Yn0
+    realname: ubuntu
+    username: ubuntu
+  network:
+    ethernets:
+      eth0: {dhcp4: true}
+      eth1: {critical: true, dhcp-identifier: mac, dhcp4: true}
+    version: 2
+  ssh:
+    allow-pw: true
+    authorized-keys: ["{{ ssh_public_key }}"]
+    install-server: true
+  interactive-sections:
+    - storage
+  updates: security
+  version: 1
+

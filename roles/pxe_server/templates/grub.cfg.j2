@@ -1,0 +1,55 @@
+set timeout=3
+
+if loadfont /grub/font.pf2 ; then
+ set gfxmode=auto
+ insmod efi_gop
+ insmod efi_uga
+ insmod gfxterm
+ terminal_output gfxterm
+fi
+
+# https://github.com/vinceliuice/grub2-themes
+# https://linuxguideandhints.com/el/pxeboot.html
+insmod png
+background_image -m stretch /grub/splash.png
+
+# Let us understand the individual option used in our kernel menu
+# url: provide the ubuntu live-server image link
+# autoinstall: This will make sure that the server installer will not ask for any confirmation before writing to the disks
+# ds=nocloud-net: Means the instance is booting on a cloud of some sort, however do not expect the cloud metadata service to be available! This helps cloud-init not wait for the metadata service to appear. You can pass a custom metadata network service by passing the s= parameter
+# s=<seedlocation>: This allows you to set the 'seed location'. The value can be a url of 'file:///' format, or of 'http://' format. If you want to use http or another network based seed, then 'nocloud-net' must be used as the data source, rather than 'nocloud'. meta-data and user-data will be read from <seedlocation>meta-data and <seedlocation>user-data respectively. For more details you can read UEC/Images/KVMKernelOptions and NoCloud
+# cloud-config-url: Adding cloud-config-url=/dev/null to the kernel arguments does prevent cloud-init from downloading the ISO, and the ISO is only downloaded once.
+# ip=dhcp: This will assign the address via DHCP server
+# fsck.mode=skip: By default ubuntu installer will perform integrity check of the ISO which takes up some time so we will disable that.
+
+# IMPORTANT NOTE:
+# make sure to escape the ';' or surround argument in quotes
+# ds=cloud-net\;s or else for some reason the autoinstall doesn't work.	
+# ramdisk size based on iso file, so 1.5GB
+
+menuentry '{{ iso_url | basename | splitext | first }} (PXE)' {
+
+	echo "Loading Kernel..."
+	linux vmlinuz ramdisk_size=1500000 ip=dhcp fsck.mode=skip url="http://{{ http_ip }}/iso/{{ iso_url | basename }}" autoinstall ds="nocloud-net;s=http://{{ http_ip }}/ks/" root=/dev/ram0 cloud-config-url=/dev/null
+
+	echo "Loading Ram Disk..."
+	initrd initrd
+
+}
+
+menuentry 'Reboot' {
+  reboot
+}
+
+menuentry 'EFI System Setup' $menuentry_id_option 'uefi-firmware' {
+  fwsetup
+}
+
+menuentry 'Reboot' {
+  reboot
+}
+
+menuentry 'Shutdown' {
+  halt
+}
+

@@ -1,0 +1,66 @@
+- name: Download boot image
+  ansible.builtin.get_url:
+    url: "{{ iso_url }}"
+    dest: "{{ role_path }}/files/data/iso/{{ iso_url | basename }}"
+    checksum: "{{ iso_checksum }}"
+    mode: 0644
+
+- name: Download uefi grub signed
+  ansible.builtin.get_url:
+    url: "http://archive.ubuntu.com/ubuntu/dists/focal/main/uefi/grub2-amd64/current/grubnetx64.efi.signed"
+    dest: "{{ role_path }}/files/data/pxe-config/grubnetx64.efi.signed"
+    checksum: "sha256:279a5a755bc248d22799434a261b92698740ab817d8aeccbd0cb7409959a1463"
+    mode: 0644
+
+- name: Extract boot image
+  ansible.builtin.command:
+    cmd: "xorriso -osirrox on -indev
+       {{ role_path }}/files/data/iso/{{ iso_url | basename }}
+       -extract /
+       {{ role_path }}/files/data/os"
+    creates: "{{ role_path }}/files/data/os/md5sum.txt"
+
+
+- name: Generate ks config
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "{{ role_path }}/files/data/ks/{{ item }}"
+    mode: 0644
+  loop:
+    - user-data
+    - meta-data
+
+- name: Generate pxelinux config
+  ansible.builtin.template:
+    src: pxelinux.cfg.j2
+    dest: "{{ role_path }}/files/data/pxe-config/pxelinux.cfg"
+    mode: 0644
+
+- name: Generate DHCP config
+  ansible.builtin.template:
+    src: dhcpd.conf.j2
+    dest: "{{ role_path }}/files/data/pxe-config/dhcpd.conf"
+    mode: 0644
+
+- name: Generate GRUB config
+  ansible.builtin.template:
+    src: grub.cfg.j2
+    dest: "{{ role_path }}/files/data/pxe-config/grub.cfg"
+    mode: 0644
+
+- name: Start the ephemeral PXE server
+  community.docker.docker_compose:
+    project_src: "{{ role_path }}/files"
+    state: present
+    restarted: true
+    build: true
+
+- name: "Check logs with: docker-compose -f {{ role_path }}/files/docker-compose.yml logs -f"
+  ansible.builtin.pause:
+    prompt: "Ephemeral PXE server running, press enter to stop."
+
+- name: Stop the ephemeral PXE server
+  community.docker.docker_compose:
+    project_src: "{{ role_path }}/files"
+    state: absent
+
