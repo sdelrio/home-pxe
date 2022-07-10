@@ -16,17 +16,18 @@ services:
     network_mode: host
     volumes:
       # EFI
+      - ./data/pxe-config/grub-custom:/var/lib/tftpboot/grub/grub-custom
       - ./data/pxe-config/grub.cfg:/var/lib/tftpboot/grub/grub.cfg
+      - ./data/os/boot/grub/font.pf2:/var/lib/tftpboot/grub/font.pf2
+      - ./data/os/isolinux/splash.png:/var/lib/tftpboot/grub/splash.png
+      - ./data/os/boot/grub/x86_64-efi:/var/lib/tftpboot/grub/x86_64-efi
       - ./data/pxe-config/grubnetx64.efi.signed:/var/lib/tftpboot/boot/grubnetx64.efi.signed
       - ./data/os/casper/vmlinuz:/var/lib/tftpboot/vmlinuz
       - ./data/os/casper/initrd:/var/lib/tftpboot/initrd
       # ubuntu's default menu requirements
-      - ./data/os/boot/grub/font.pf2:/var/lib/tftpboot/grub/font.pf2
-      - ./data/os/isolinux/splash.png:/var/lib/tftpboot/grub/splash.png
-      - ./data/os/boot/grub/x86_64-efi:/var/lib/tftpboot/grub/x86_64-efi
-      - ./data/os/isolinux/vesamenu.c32:/var/lib/tftpboot/vesamenu.c32
-      - ./data/os/isolinux/libutil.c32:/var/lib/tftpboot/libutil.c32
-      - ./data/os/isolinux/libcom32.c32:/var/lib/tftpboot/libcom32.c32
+      #- ./data/os/isolinux/vesamenu.c32:/var/lib/tftpboot/vesamenu.c32
+      #- ./data/os/isolinux/libutil.c32:/var/lib/tftpboot/libutil.c32
+      #- ./data/os/isolinux/libcom32.c32:/var/lib/tftpboot/libcom32.c32
   http:
     image: "nginx:1.21-alpine"
     network_mode: host

@@ -1,17 +1,17 @@
 set timeout=3
 
-if loadfont /grub/font.pf2 ; then
- set gfxmode=auto
- insmod efi_gop
- insmod efi_uga
- insmod gfxterm
- terminal_output gfxterm
-fi
+#if loadfont /grub/font.pf2 ; then
+#  set gfxmode=auto
+#  insmod efi_gop
+#  insmod efi_uga
+#  insmod gfxterm
+#  terminal_output gfxterm
+#fi
 
 # https://github.com/vinceliuice/grub2-themes
 # https://linuxguideandhints.com/el/pxeboot.html
-insmod png
-background_image -m stretch /grub/splash.png
+#insmod png
+#background_image -m stretch /grub/splash.png
 
 # Let us understand the individual option used in our kernel menu
 # url: provide the ubuntu live-server image link
@@ -24,18 +24,16 @@ background_image -m stretch /grub/splash.png
 
 # IMPORTANT NOTE:
 # make sure to escape the ';' or surround argument in quotes
-# ds=cloud-net\;s or else for some reason the autoinstall doesn't work.	
+# ds=cloud-net\;s or else for some reason the autoinstall doesn't work.
 # ramdisk size based on iso file, so 1.5GB
 
-menuentry '{{ iso_url | basename | splitext | first }} (PXE)' {
+# https://askubuntu.com/questions/1272400/how-do-i-automate-network-installation-of-many-ubuntu-18-04-systems-with-efi-and
 
-	echo "Loading Kernel..."
-	linux vmlinuz ramdisk_size=1500000 ip=dhcp fsck.mode=skip url="http://{{ http_ip }}/iso/{{ iso_url | basename }}" autoinstall ds="nocloud-net;s=http://{{ http_ip }}/ks/" root=/dev/ram0 cloud-config-url=/dev/null
+if [ -s ${prefix}/grub-custom/grub-${net_default_mac}.cfg ]; then
+    source ${prefix}/grub-custom/grub-${net_default_mac}.cfg
+fi
 
-	echo "Loading Ram Disk..."
-	initrd initrd
-
-}
+source ${prefix}/grub-custom/grub-generic.cfg
 
 menuentry 'Reboot' {
   reboot

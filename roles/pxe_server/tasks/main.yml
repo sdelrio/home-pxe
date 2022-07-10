@@ -1,3 +1,8 @@
+
+- name: List 'metal' groups config
+  ansible.builtin.debug:
+    var: groups['metal']
+
 - name: Download boot image
   ansible.builtin.get_url:
     url: "{{ iso_url }}"
@@ -15,9 +20,9 @@
 - name: Extract boot image
   ansible.builtin.command:
     cmd: "xorriso -osirrox on -indev
-       {{ role_path }}/files/data/iso/{{ iso_url | basename }}
-       -extract /
-       {{ role_path }}/files/data/os"
+        {{ role_path }}/files/data/iso/{{ iso_url | basename }}
+        -extract /
+        {{ role_path }}/files/data/os"
     creates: "{{ role_path }}/files/data/os/md5sum.txt"
 
 
@@ -46,6 +51,25 @@
   ansible.builtin.template:
     src: grub.cfg.j2
     dest: "{{ role_path }}/files/data/pxe-config/grub.cfg"
+    mode: 0644
+
+- name: Generate grub-custom folder
+  ansible.builtin.file:
+    path: "{{ role_path }}/files/data/pxe-config/grub-custom/"
+    state: directory
+    mode: 0755
+
+- name: Generate GRUB 'metal' grous config
+  ansible.builtin.template:
+    src: grub-section.cfg.j2
+    dest: "{{ role_path }}/files/data/pxe-config/grub-custom/grub-{{ hostvars[item]['mac'] }}.cfg"
+    mode: 0644
+  loop: "{{ groups['metal'] }}"
+
+- name: Generate GRUB groups generic
+  ansible.builtin.template:
+    src: grub-generic.cfg.j2
+    dest: "{{ role_path }}/files/data/pxe-config/grub-custom/grub-generic.cfg"
     mode: 0644
 
 - name: Start the ephemeral PXE server

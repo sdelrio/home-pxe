@@ -2,6 +2,7 @@ APP := ansible
 WORKON_HOME ?= .venv
 VENV_BASE := $(WORKON_HOME)/$(APP)
 PYTHON := $(VENV_BASE)/bin/python
+INVENTORY ?= home1
 
 default: help
 
@@ -12,11 +13,15 @@ help:
 		{printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo ""
 
+all:	## Make dependencies and start ephemeral PXE server
+all:	requirements boot
+
 clean:	## Clean downloaded files
 	@rm -rf roles/pxe_server/files/data/iso/*
 	@rm -rf roles/pxe_server/files/data/pxe-config/*
 	@rm -rf roles/pxe_server/files/data/ks/*
 	@rm -rf roles/pxe_server/files/data/os/*
+	@rm -rf roles/pxe_server/files/data/os/.disk
 
 clean-venv:	## Clean virtualenv files
 	@rm -rf $(VENV_BASE)
@@ -42,7 +47,7 @@ version:
 		ansible --version
 
 boot:	## Boot PXE server
-boot:	requirements
+boot:
 	@. $(VENV_BASE)/bin/activate && \
-		ansible-playbook --inventory , boot.yml
+		ansible-playbook -i inventory/$(INVENTORY)/inventory.yml boot.yml
 
