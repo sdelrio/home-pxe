@@ -3,6 +3,11 @@
   ansible.builtin.debug:
     var: groups['metal']
 
+- name: List 'metal' hostvar items config
+  ansible.builtin.debug:
+    var: hostvars[item].mac
+  loop: "{{ groups['metal'] }}"
+
 - name: Download boot image
   ansible.builtin.get_url:
     url: "{{ iso_url }}"
@@ -25,7 +30,6 @@
         {{ role_path }}/files/data/os"
     creates: "{{ role_path }}/files/data/os/md5sum.txt"
 
-
 - name: Generate ks config
   ansible.builtin.template:
     src: "{{ item }}.j2"
@@ -34,6 +38,31 @@
   loop:
     - user-data
     - meta-data
+  tags: ["debug"]
+
+- name: Generate ks diretories for custom user-data by mac
+  ansible.builtin.file:
+    path: "{{ role_path }}/files/data/ks/{{ hostvars[item]['mac'] }}/"
+    state: directory
+    mode: 0755
+  loop: "{{ groups['metal'] }}"
+  tags: ["debug"]
+
+- name: Generate ks custom user-data by mac
+  ansible.builtin.template:
+    src: "user-data.j2"
+    dest: "{{ role_path }}/files/data/ks/{{ hostvars[item]['mac'] }}/user-data"
+    mode: 0644
+  loop: "{{ groups['metal'] }}"
+  tags: ["debug"]
+
+- name: Generate ks custom meta-data by mac
+  ansible.builtin.template:
+    src: "meta-data.j2"
+    dest: "{{ role_path }}/files/data/ks/{{ hostvars[item]['mac'] }}/meta-data"
+    mode: 0644
+  loop: "{{ groups['metal'] }}"
+  tags: ["debug"]
 
 - name: Generate pxelinux config
   ansible.builtin.template:
@@ -59,18 +88,20 @@
     state: directory
     mode: 0755
 
-- name: Generate GRUB 'metal' grous config
+- name: Generate GRUB 'metal' groups config
   ansible.builtin.template:
-    src: grub-section.cfg.j2
+    src: grub-mac.cfg.j2
     dest: "{{ role_path }}/files/data/pxe-config/grub-custom/grub-{{ hostvars[item]['mac'] }}.cfg"
     mode: 0644
   loop: "{{ groups['metal'] }}"
+  tags: ["debug"]
 
 - name: Generate GRUB groups generic
   ansible.builtin.template:
     src: grub-generic.cfg.j2
     dest: "{{ role_path }}/files/data/pxe-config/grub-custom/grub-generic.cfg"
     mode: 0644
+  tags: ["debug"]
 
 - name: Start the ephemeral PXE server
   community.docker.docker_compose:

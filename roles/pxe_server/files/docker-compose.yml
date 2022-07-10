@@ -18,8 +18,11 @@ services:
       # EFI
       - ./data/pxe-config/grub-custom:/var/lib/tftpboot/grub/grub-custom
       - ./data/pxe-config/grub.cfg:/var/lib/tftpboot/grub/grub.cfg
-      - ./data/os/boot/grub/font.pf2:/var/lib/tftpboot/grub/font.pf2
-      - ./data/os/isolinux/splash.png:/var/lib/tftpboot/grub/splash.png
+      - ./data/os/boot/grub/fonts:/var/lib/tftpboot/grub/fonts
+      #- ./data/os/boot/grub/font.pf2:/var/lib/tftpboot/grub/font.pf2
+      #- ./data/os/isolinux/splash.png:/var/lib/tftpboot/grub/splash.png
+      - ./data/os/isolinux/splash.png
+
       - ./data/os/boot/grub/x86_64-efi:/var/lib/tftpboot/grub/x86_64-efi
       - ./data/pxe-config/grubnetx64.efi.signed:/var/lib/tftpboot/boot/grubnetx64.efi.signed
       - ./data/os/casper/vmlinuz:/var/lib/tftpboot/vmlinuz

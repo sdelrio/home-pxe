@@ -2,6 +2,15 @@ all:
   hosts:
     worker1:
       mac: "11:22:33:44:55:66"
+      hostname: "worker1"
+      external_ip: "192.168.1.203"
+      external_mask: "192.168.1.255"
+      external_gw: "192.168.1.1"
+      vlans:
+        id: 10
+        link: eno1
+        ip: 10.6.3.203
+        mask: 24
   children:
     metal:
       hosts:

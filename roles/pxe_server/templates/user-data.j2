@@ -4,7 +4,7 @@ autoinstall:
   locale: "es_ES.UTF-8"
   keyboard:
     layout: "es"
-    variant: "es"
+    variant: ""
     #toggle: null
   apt:
     geoip: true
@@ -14,22 +14,67 @@ autoinstall:
       uri: http://archive.ubuntu.com/ubuntu
     - arches: [default]
       uri: http://ports.ubuntu.com/ubuntu-ports
-  identity: 
-    hostname: ubuntu-server
-    password: $1$/gNl4rCo$x3VnrcV.TCnUUkjBm96Yn0
-    realname: ubuntu
-    username: ubuntu
+  identity:
+    hostname: {{ hostvars[item].hostname | default('ubuntu-server')}}
+    password: {{ server_password | string | password_hash('sha512', 65534 | random(seed=inventory_hostname) | string ) }}
+    realname: {{ server_user }}
+    username: {{ server_user }}
+{% if hostvars[item].storage is defined %}
+  storage:
+  # Samples:
+  # https://docs.rackn.io/en/latest/doc/operations/imagedeploy-storage.html
+  # https://curtin.readthedocs.io/en/latest/topics/storage.html
+    layout:
+      name: direct
+      match:
+        ssd: yes
+        size: smallest
+      swap:
+        size: {{ hostvars[item].storage.swap.size | default('0') }}
+    {{ hostvars[item].storage | to_nice_yaml | indent(6) }}
+{% endif %}
+{% if hostvars[item].mac is defined %}
   network:
-    ethernets:
-      eth0: {dhcp4: true}
-      eth1: {critical: true, dhcp-identifier: mac, dhcp4: true}
     version: 2
+    # To debug this section, use this on machine:
+    #   sudo netplan try
+    ethernets:
+      eno1:
+    #    wakeonlan: true
+        dhcp4: false
+        addresses:
+          - {{ hostvars[item].external_ip }}/{{ hostvars[item].external_mask}}
+        routes:
+          - to: default
+            via: {{ hostvars[item].external_gw }}
+        nameservers:
+          addresses:
+            - 80.58.61.250
+            - 80.58.61.254
+          search:
+            - internal.lorien.cloud
+{% else %}
+
+{% endif %}
+{% if hostvars[item].vlans is defined %}
+{% set myvlan = hostvars[item].vlans %}
+    vlans:
+      vlan10:
+        id: {{ myvlan.id | string }}
+        link: {{ myvlan.link | string | default('id0') }}
+        dhcp4: no
+        addresses:
+          -  {{ myvlan.ip }}/{{ myvlan.mask }}
+{% endif %}
+#      eth0: {dhcp4: true}
+#      eth1: {critical: true, dhcp-identifier: mac, dhcp4: true}
   ssh:
     allow-pw: true
     authorized-keys: ["{{ ssh_public_key }}"]
     install-server: true
   interactive-sections:
+{% if hostvars[item].storage is not defined %}
     - storage
+{% endif %}
   updates: security
   version: 1
-
