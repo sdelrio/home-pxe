@@ -1,7 +1,9 @@
 ansible_user: root
 ansible_ssh_iprivate_key_file: "{{ lookup('file', '~/.ssh/id_ed25519 }}"
 ssh_public_key: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
-dns_severs: "8.8.8.8"
+dns_servers:
+  - "8.8.8.8"
+  - "8.8.4.4"
 http_ip: "{{ ansible_enp5s0.ipv4.address }}"
 
 locale: "es_ES.UTF-8"
@@ -9,6 +11,7 @@ dhcpd_network: "{{ ansible_enp5s0.ipv4.network }}"
 dhcpd_netmask: "{{ ansible_enp5s0.ipv4.netmask }}"
 dhcpd_broadcast: "{{ ansible_enp5s0.ipv4.broadcast }}"
 dhcpd_address: "{{ ansible_enp5s0.ipv4.address }}"
+dhcpd_gateway: "192.168.0.1"
 dhcpd_first: 203
 dhcpd_last: -2
 

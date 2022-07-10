@@ -33,46 +33,50 @@ autoinstall:
         size: {{ hostvars[item].storage.swap.size | default('0') }}
     {{ hostvars[item].storage | to_nice_yaml | indent(6) }}
 {% endif %}
-{% if hostvars[item].mac is defined %}
+{% if hostvars[item].network is defined %}
   network:
     version: 2
     # To debug this section, use this on machine:
     #   sudo netplan try
     ethernets:
-      eno1:
+      {% for i in hostvars[item].network -%}
+      {{ i.interface }}:
     #    wakeonlan: true
-        dhcp4: false
+        dhcp4: {{ i.dhcp4 | default('false') }}
+        {% if i.addresses -%}
         addresses:
-          - {{ hostvars[item].external_ip }}/{{ hostvars[item].external_mask}}
+          {{ i.addresses | to_nice_yaml | indent(12) }}
+        {% endif -%}
         routes:
           - to: default
-            via: {{ hostvars[item].external_gw }}
+            via: {{ dhcpd_gateway }}
         nameservers:
           addresses:
-            - 80.58.61.250
-            - 80.58.61.254
+            {{ dns_servers | to_nice_yaml | indent(12) }}
           search:
-            - internal.lorien.cloud
-{% else %}
-
+            {{ dns_search | to_nice_yaml | indent(12) }}
+      {% endfor -%}
 {% endif %}
 {% if hostvars[item].vlans is defined %}
 {% set myvlan = hostvars[item].vlans %}
+{% set firstlink = hostvars[item].network | first %}
+
     vlans:
       vlan10:
         id: {{ myvlan.id | string }}
-        link: {{ myvlan.link | string | default('id0') }}
+        link: {{ myvlan.link | default(firstlink) }}
         dhcp4: no
         addresses:
           -  {{ myvlan.ip }}/{{ myvlan.mask }}
 {% endif %}
-#      eth0: {dhcp4: true}
-#      eth1: {critical: true, dhcp-identifier: mac, dhcp4: true}
   ssh:
     allow-pw: true
     authorized-keys: ["{{ ssh_public_key }}"]
     install-server: true
   interactive-sections:
+{% if hostvars[item].network is not defined %}
+    - network
+{% endif %}
 {% if hostvars[item].storage is not defined %}
     - storage
 {% endif %}
