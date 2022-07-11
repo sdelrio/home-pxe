@@ -39,7 +39,7 @@ autoinstall:
     # To debug this section, use this on machine:
     #   sudo netplan try
     ethernets:
-      {% for i in hostvars[item].network -%}
+{% for i in hostvars[item].network %}
       {{ i.interface }}:
     #    wakeonlan: true
         dhcp4: {{ i.dhcp4 | default('false') }}
@@ -55,19 +55,19 @@ autoinstall:
             {{ dns_servers | to_nice_yaml | indent(12) }}
           search:
             {{ dns_search | to_nice_yaml | indent(12) }}
-      {% endfor -%}
-{% endif %}
-{% if hostvars[item].vlans is defined %}
-{% set myvlan = hostvars[item].vlans %}
-{% set firstlink = hostvars[item].network | first %}
-
+{%- endfor -%}
+{%- endif -%}
+{%- if hostvars[item].vlans is defined %}
     vlans:
+{% for myvlan in hostvars[item].vlans %}
+{% set firstlink = hostvars[item].network | first %}
       vlan10:
         id: {{ myvlan.id | string }}
         link: {{ myvlan.link | default(firstlink) }}
         dhcp4: no
         addresses:
-          -  {{ myvlan.ip }}/{{ myvlan.mask }}
+          {{ myvlan.addresses | to_nice_yaml | indent(10) }}
+{% endfor -%}
 {% endif %}
   ssh:
     allow-pw: true
