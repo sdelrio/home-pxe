@@ -11,7 +11,7 @@ dhcpd_network: "{{ ansible_enp5s0.ipv4.network }}"
 dhcpd_netmask: "{{ ansible_enp5s0.ipv4.netmask }}"
 dhcpd_broadcast: "{{ ansible_enp5s0.ipv4.broadcast }}"
 dhcpd_address: "{{ ansible_enp5s0.ipv4.address }}"
-dhcpd_gateway: "192.168.0.1"
+dhcpd_gateway: "192.168.1.1"
 dhcpd_first: 203
 dhcpd_last: -2
 

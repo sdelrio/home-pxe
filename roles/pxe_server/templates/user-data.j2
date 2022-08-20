@@ -1,38 +1,24 @@
 #cloud-config
-#https://ubuntu.com/server/docs/install/autoinstall-reference
+# https://ubuntu.com/server/docs/install/autoinstall-reference
+#samples on:
+# https://docs.rackn.io/en/latest/doc/operations/imagedeploy-storage.html
+# https://curtin.readthedocs.io/en/latest/topics/storage.html
+# https://github.com/canonical/curtin/blob/master/examples/tests/simple-storage.yaml
+# https://ubuntu.com/server/docs/install/autoinstall-schema#Schema
+# https://gist.github.com/noslin005/9b409735bf85df225c17a69e89e381a6
 autoinstall:
-  locale: "es_ES.UTF-8"
-  keyboard:
-    layout: "es"
-    variant: ""
-    #toggle: null
-  apt:
-    geoip: true
-    preserve_sources_list: false
-    primary:
-    - arches: [amd64, i386]
-      uri: http://archive.ubuntu.com/ubuntu
-    - arches: [default]
-      uri: http://ports.ubuntu.com/ubuntu-ports
   identity:
     hostname: {{ hostvars[item].hostname | default('ubuntu-server')}}
     password: {{ server_password | string | password_hash('sha512', 65534 | random(seed=inventory_hostname) | string ) }}
     realname: {{ server_user }}
     username: {{ server_user }}
-{% if hostvars[item].storage is defined %}
-  storage:
-  # Samples:
-  # https://docs.rackn.io/en/latest/doc/operations/imagedeploy-storage.html
-  # https://curtin.readthedocs.io/en/latest/topics/storage.html
-    layout:
-      name: direct
-      match:
-        ssd: yes
-        size: smallest
-      swap:
-        size: {{ hostvars[item].storage.swap.size | default('0') }}
-    {{ hostvars[item].storage | to_nice_yaml | indent(6) }}
-{% endif %}
+  keyboard:
+    layout: "es"
+    toggle: null
+    variant: ""
+    #layout: hu
+  #locale: hu_HU.UTF-8
+  locale: "es_ES.UTF-8"
 {% if hostvars[item].network is defined %}
   network:
     version: 2
@@ -69,16 +55,31 @@ autoinstall:
           {{ myvlan.addresses | to_nice_yaml | indent(10) }}
 {% endfor -%}
 {% endif %}
+  packages:
+    - vi
+    - less
+    - net-tools
   ssh:
-    allow-pw: true
+    allow-pw: false
     authorized-keys: ["{{ ssh_public_key }}"]
     install-server: true
-  interactive-sections:
-{% if hostvars[item].network is not defined %}
-    - network
+{% if hostvars[item].storage is defined %}
+  storage:
+    {{ hostvars[item].storage | to_yaml(indent=4) | indent(4) }}
 {% endif %}
+  late-commands:
+  - 'echo "{{ server_user }} ALL=(ALL) NOPASSWD:ALL" > /target/etc/sudoers.d/{{ server_user }}-nopw'
+  - chmod 440 /target/etc/sudoers.d/{{ server_user }}-nopw
+  - chroot /target apt-get -y -q purge snap
+
+  version: 1
+  updates: security
+{% if hostvars[item].storage is not defined or hostvars[item].network is not defined  %}
+  interactive-sections:
 {% if hostvars[item].storage is not defined %}
     - storage
 {% endif %}
-  updates: security
-  version: 1
+{% if hostvars[item].network is not defined %}
+    - network
+{% endif %}
+{% endif %}
