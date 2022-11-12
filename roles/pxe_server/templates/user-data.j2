@@ -77,9 +77,9 @@ autoinstall:
   - chroot /target apt-get -y -q purge packagekit
   - chroot /target apt-get -y -q purge polkitd
   - chroot /target apt-get -y -q purge --auto-remove multipath-tools
-  - sed -i 's/^servers.*//g' /etc/openntpd/ntpd.conf
-  - echo servers hora.roa.es >> /etc/openntpd/ntpd.conf
-  - echo servers minuto.roa.es >> /etc/openntpd/ntpd.conf
+  - sed -i 's/^servers.*//g' /target/etc/openntpd/ntpd.conf
+  - echo servers hora.roa.es >> /target/etc/openntpd/ntpd.conf
+  - echo servers minuto.roa.es >> /target/etc/openntpd/ntpd.conf
 
   version: 1
   updates: security
