@@ -39,8 +39,10 @@ autoinstall:
         nameservers:
           addresses:
             {{ dns_servers | to_nice_yaml | indent(12) }}
+{% if dns_search != [] %}
           search:
             {{ dns_search | to_nice_yaml | indent(12) }}
+{%- endif -%}
 {%- endfor -%}
 {%- endif -%}
 {%- if hostvars[item].vlans is defined %}
@@ -70,7 +72,7 @@ autoinstall:
   late-commands:
   - 'echo "{{ server_user }} ALL=(ALL) NOPASSWD:ALL" > /target/etc/sudoers.d/{{ server_user }}-nopw'
   - chmod 440 /target/etc/sudoers.d/{{ server_user }}-nopw
-  - chroot /target apt-get -y -q purge snap
+  - chroot /target apt-get -y -q purge snap packagekit polkitd multipathd
 
   version: 1
   updates: security
