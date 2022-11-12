@@ -56,3 +56,7 @@ debug:
 	@. $(VENV_BASE)/bin/activate && \
 		ansible-playbook -i inventory/$(INVENTORY)/inventory.yml -t debug --diff boot.yml
 
+logs:	## docker compose logs
+logs:
+	@docker-compose -f $$(pwd)/roles/pxe_server/files/docker-compose.yml logs -f
+
