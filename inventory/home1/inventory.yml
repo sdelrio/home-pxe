@@ -12,47 +12,66 @@ all:
           link: eno1
           addresses:
             - 10.6.3.203/24
+    worker2:
+      mac: "12:22:33:44:55:66"
+      hostname: "worker-2"
+      network:
+        - interface: eno1
+          addresses:
+            - 192.168.1.202/24
+      vlans:
+        - id: 10
+          link: eno1
+          addresses:
+            - 10.6.3.202/24
 
   children:
     metal:
       hosts:
         worker1:
-    nvme500:
-      hosts:
-          worker1:
       vars:
-        #/dev/nvme0n1
-        #working partition
-        #  if you want to add LVM into the mix or make some other complex storage configuration, the easiest way to automate it,
-        #  is to first do a manual install and then copy the relevant storage section from the autoinstall-user-data file to your
-        #  custom user-data file.
         storage:
           config:
-          - {grub_device: false, id: disk-nvme0n1, name: '', path: /dev/nvme0n1, preserve: false,
+          - {grub_device: false, id: "main-disk", name: '', path: "{{ disk_device }}", preserve: false,
               ptable: gpt, type: disk, wipe: superblock-recursive}
-          # Partition 0 /boot/efi
-          - {device: disk-nvme0n1, flag: boot, grub_device: true, id: partition-0, number: 1,
-              preserve: false, size: "1G", type: partition, wipe: superblock}
-          - {fstype: fat32, id: format-0, preserve: false, type: format, volume: partition-0}
-          # Partition 1  /boot
-          - {device: disk-nvme0n1, flag: '', grub_device: false, id: partition-1, number: 2,
-              preserve: false, size: 2G, type: partition, wipe: superblock}
-          - {fstype: ext4, id: format-1, preserve: false, type: format, volume: partition-1}
-          # Partition 2 /var/lib/containerd
-          - {device: disk-nvme0n1, flag: '', grub_device: false, id: partition-2, number: 3,
-              preserve: false, size: 38G, type: partition, wipe: superblock}
-          - {fstype: xfs, id: format-2, preserve: false, type: format, volume: partition-2}
+
+          # Partition 1 /boot/efi
+          - {device: "main-disk", flag: boot, grub_device: true, id: partition-1, number: 1,
+              preserve: false, size: "512M", type: partition, wipe: superblock}
+          - {fstype: fat32, id: format-1, preserve: false, type: format, volume: partition-1}
+
+          # Partition 2  /boot
+          - {device: "main-disk", flag: '', grub_device: false, id: partition-2, number: 2,
+              preserve: false, size: "512M", type: partition, wipe: superblock}
+          - {fstype: ext4, id: format-2, preserve: false, type: format, volume: partition-2}
+
           # Partition 3 /
+          - {device: "main-disk", flag: '', grub_device: false, id: partition-3, number: 3,
+              preserve: false, size: 79G, type: partition, wipe: superblock}
+          - {fstype: ext4, id: format-3, preserve: false, type: format, volume: partition-3}
+
           # For the last partition specified for a particular device, you can specify the size as "-1" to indicate
           # that the partition should fill the remaining space.
-          - {device: disk-nvme0n1, flag: '', grub_device: false, id: partition-3, number: 4,
+          - {device: "main-disk", flag: '', grub_device: false, id: partition-4, number: 4,
               preserve: false, size: -1, type: partition, wipe: superblock}
+          # No format in partition-4 we will use as a loopback device
+          #- {fstype: ext4, id: format-4, preserve: false, type: format, volume: partition-4}
+
           # mounts
-          - {fstype: ext4, id: format-3, preserve: false, type: format, volume: partition-3}
-          - {device: format-3, id: mount-4, path: /, type: mount}
-          - {device: format-1, id: mount-2, path: /boot, type: mount}
-          - {device: format-2, id: mount-3, path: /var/lib/containerd, type: mount}
-          - {device: format-0, id: mount-1, path: /boot/efi, type: mount}
+          - {device: format-3, id: mount-3, path: /, type: mount}
+          - {device: format-2, id: mount-2, path: /boot, type: mount}
+          - {device: format-1, id: mount-1, path: /boot/efi, type: mount}
           swap:
             size: 0
 
+    ssd500:
+      hosts:
+          worker1:
+      vars:
+        disk_device: '/dev/sda'
+
+    nvme500:
+      hosts:
+          worker2:
+      vars:
+        disk_device: '/dev/nvme0n1'
