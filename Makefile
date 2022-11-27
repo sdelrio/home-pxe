@@ -49,7 +49,7 @@ version:
 boot:	## Boot PXE server
 boot:
 	@. $(VENV_BASE)/bin/activate && \
-		ansible-playbook -i inventory/$(INVENTORY)/inventory.yml boot.yml
+		ansible-playbook --diff -i inventory/$(INVENTORY)/inventory.yml boot.yml
 
 debug:	## Execute debug tags on ansible boot.yml
 debug:
